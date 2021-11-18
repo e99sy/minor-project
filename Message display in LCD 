@@ -1,0 +1,202 @@
+#include <LiquidCrystal.h>
+
+int p,q,n,t,flag,e[100],d[100],temp[100],j,i;
+char msg[100], en[100], m[100];
+
+int prime(long int pr)
+{
+  int i;
+  pr = (double)pr;
+  j=sqrt(pr);
+  for(i=2;i<=j;i++)
+    {
+      if(pr%i==0)
+  return 0;
+    }
+  return 1;
+}
+void ce()
+{
+  int k;
+  k=0;
+  for(i=2;i<t;i++)
+    {
+      if(t%i==0)
+  continue;
+      flag=prime(i);
+      if(flag==1&&i!=p&&i!=q)
+  {
+    e[k]=i;
+    flag=cd(e[k]);
+    if(flag>0)
+      {
+        d[k]=flag;
+        k++;
+      }
+    if(k==99)
+      break;
+  }
+    }
+}
+long int cd(long int x)
+{
+  int k=1;
+  while(1)
+    {
+      k=k+t;
+      if(k%x==0)
+  return(k/x);
+    }
+}
+String encrypt()
+{
+  int pt,ct,key=e[0],k,len;
+  i=0;
+  len=strlen(msg)-1;
+  while(i<len)
+  {
+    pt=m[i];
+    pt=pt-96;
+    k=1;
+    for(j=0;j<key;j++)
+    {
+      k=k*pt;
+      k=k%n;
+    }
+    temp[i]=k;
+    ct=k+96;
+    en[i]=ct;
+    i++;
+  }
+  en[i]=-1;
+  Serial.println("THE ENCRYPTED MESSAGE IS");
+  String cipher=" ";
+  for(int i=0;en[i]!=-1;i++) {
+//    Serial.print(String(en[i]));
+    cipher.concat(String(en[i]));
+  }
+  Serial.println("");
+  delay(100);
+  Serial.println("======================================");
+  return cipher;
+}
+String decrypt()
+{
+  int pt,ct,key=d[0],k;
+  i=0;
+  while(en[i]!=-1)
+    {
+      ct=temp[i];
+      k=1;
+      for(j=0;j<key;j++)
+  {
+    k=k*ct;
+    k=k%n;
+  }
+      pt=k+96;
+      m[i]=pt;
+      i++;
+    }
+  m[i]=-1;
+  Serial.println("THE DECRYPTED MESSAGE IS");
+  int c=8;
+  String plain=" ";
+  for(int i=0;m[i]!=-1;i++) {
+//    Serial.print(String(m[i]));
+    plain.concat(String(m[i]));
+  }
+  Serial.println();
+  delay(100);
+  Serial.println("======================================");
+  return plain;
+}
+
+const int RS = 12,
+  EN = 11,
+  D4 = 5,
+  D5 = 4,
+  D6 = 3,
+  D7 = 2;
+LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
+
+//char msg[PLAINTEXT_SIZE] = "Nepal";
+////String msg = "";
+//char cipher_msg[CIPHERTEXT_SIZE] = "Hello";
+//int publicKey[2] = {14351, 11};
+//int privateKey[2] = {14351, 1283};
+
+void setup() {
+  // put your setup code here, to executed once:
+  Serial.begin(9600);
+  Serial.flush();
+  Serial.println("Welcome to RSA");
+  Serial.println("Enter p and q ");
+  Serial.println("Enter Message[format: msg: m<Your message>]");
+  lcd.begin(16, 2);
+  lcd.setCursor(0,0);
+  lcd.print("Enter p&q monitor:");
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  if (Serial.available() > 0) {
+    // read the incoming string:
+    lcd.clear();
+    String test = Serial.readString();
+    int index = test.indexOf(" ");
+    int msgIndex = test.indexOf("msg");
+    String sub1 = test.substring(0,index);
+    String sub2 = test.substring(index,msgIndex-1);;
+    int msgI = test.indexOf("m", msgIndex+3);
+
+    int temp1 = sub1.toInt();
+    int temp2 = sub2.toInt();
+    p = temp1;
+    flag = prime(p);
+    q = temp2;
+    flag = prime(q);
+    Serial.println(p);
+    Serial.println(q);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("p: ");
+    lcd.setCursor(6, 0);
+    lcd.print(p);
+    lcd.setCursor(0, 1);
+    lcd.print("q: ");
+    lcd.setCursor(6, 1);
+    lcd.print(q);
+    delay(1000);
+    if (p && q) {
+      String sub3 = test.substring(msgI+1, test.length());
+      Serial.println(sub3);
+      sub3.toCharArray(msg, 100);
+      Serial.println("MSG");
+      Serial.print(msg);
+      for(i=0;i<sub3.length();i++)
+        m[i]=msg[i];
+      n=p*q;
+      Serial.println(msg);
+      t=(p-1)*(q-1);
+      ce();
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Encrypting");
+      Serial.println("Encrypting");
+      String cipher = encrypt();
+      Serial.println(cipher);
+      Serial.println("Decrypting");
+      String plain = decrypt();
+      Serial.println(plain);
+      lcd.setCursor(0,1);
+      lcd.print("Decrypting");
+      delay(3000);
+      lcd.clear();
+
+
+
+      lcd.setCursor(0,0);
+      lcd.print("Enc");
+      lcd.setCursor(4, 0);
+      lcd.print(cipher);p
